@@ -34,7 +34,8 @@ print(X_april_pm25)
 # data = json.dumps({"signature_name": "serving_default", "instances": X_april_pm25.tolist()})
 data = json.dumps({"signature_name": "serving_default", "inputs": {'lstm_input': X_april_pm25.tolist()}})
 headers = {"content-type": "application/json"}
-json_response = requests.post(f'http://localhost:8501/v1/models/pm25/versions/3:predict',
+# version 3 is for custom ConvLSTM (integer output to indicate very bad, bad, good, etc)
+json_response = requests.post(f'http://localhost:8501/v1/models/pm25/versions/1:predict',
                               data=data,
                               headers=headers)
 
@@ -43,3 +44,24 @@ print(json.loads(json_response.text).keys())
 predictions = json.loads(json_response.text)['outputs']
 # predictions = json.loads(json_response.text)['predictions']
 print("Predictions:", predictions)
+
+y_april_forecast = predictions
+
+# date for x axis
+mdh = np.arange(0, len(april_pm25_seq) + 1, 100)
+dates = april_pm25[['날짜']]
+dates = array(dates)
+month_day_hour = dates[mdh]
+
+plt.figure(figsize=(20, 10))
+plt.plot(y_april_forecast, '#FF4500')
+plt.plot(april_pm25_seq, '#4169E1')
+plt.legend(['Predicted', 'Actual'], loc='upper right', fontsize=40) # fontsize=40
+#path = 'C:/Windows/Fonts/NanumGothicBold.ttf'
+#fontprop = fm.FontProperties(fname=path, size=40)
+
+plt.title('April PM2.5 Forecast', fontsize=40) # fontproperties=fontprop, fontsize=40
+plt.xticks(mdh, month_day_hour, fontsize=20, rotation=20) # fontsize=30, rotation=45
+plt.yticks(fontsize=30) # fontsize=30
+plt.ylabel('PM2.5', fontsize=35) # fontsize=35
+plt.show()
